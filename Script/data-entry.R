@@ -94,13 +94,23 @@ info_for_concept <- function(concept) {
 }
 # info_for_concept("AVC")
 
-create_new_concept_and_collect_info <- function(doc_id) {
+entry_new_concept <- function(doc_id) {
+  make_tibble_from_info_concept <- function(concpet, info) {
+      tibble(
+        ID = doc_id,
+        Concept = concept,
+        `Abscence de`    = info$`Abscence de`   ,
+        `Suspicion de`   = info$`Suspicion de`  ,
+        `ATCD famillial` = info$`ATCD famillial`,
+        `Bien segmenté`  = info$`Bien segmenté`
+     )
+    }
   concept <- read_answer(NULL, NULL, paste("Création d'un concept pour le document", doc_id))
-  info <- list(info_for_concept(concept))
-  names(info) <- concept
-  info
+  info <- info_for_concept(concept)
+  tb <- make_tibble_from_info_concept(concept, info)
+  DF <<- rbind(DF, tb)
 }
-# create_new_concept_and_collect_info("123456")
+# entry_new_concept("123456")
 
 ask_for_more <- function(message) {
   read_answer("o", c("o", "n"), message)
@@ -112,33 +122,16 @@ input_info_for_document <- function(doc_id) {
   catn()
   info_doc <- list()
   repeat{
-    info_concept <- create_new_concept_and_collect_info(doc_id)
-    info_doc <- c(info_doc, info_concept)
+    entry_new_concept(doc_id)
     if( ask_for_more("Y a-t-il encore des concepts à saisir pour ce document ?") == "n" )
       break
   }
-  info_doc
 }
 # input_info_for_document("123456")
 
 entry_new_document <- function() {
-  make_tibble_from_info_doc <- function(info_doc, doc_id) {
-    lines <- map(names(info_doc), function(concept) {
-      details <- info_doc[[concept]]
-      tibble(
-        ID = doc_id,
-        Concept = concept,
-        `Abscence de`    = details$`Abscence de`   ,
-        `Suspicion de`   = details$`Suspicion de`  ,
-        `ATCD famillial` = details$`ATCD famillial`,
-        `Bien segmenté`  = details$`Bien segmenté`
-      )
-    })
-    do.call(rbind, lines)
-  }
   doc_id <- read_answer(NULL, NULL, "Saisissez l'ID du document")
   info_doc <- input_info_for_document(doc_id)
-  make_tibble_from_info_doc(info_doc, doc_id)
 }
 # entry_new_document()
 
@@ -146,7 +139,6 @@ saisir_document <- function() {
   doc_tibble <- entry_new_document()
   DF <<- rbind(DF, doc_tibble)
 }
-  
 
 ecrire_fichier <- function(filename = NULL) {
   list.files()
