@@ -4,7 +4,7 @@ options(dplyr.print_max = 1e9)
 
 if(! exists("DF")) DF <- NULL
 
-catn <- function(string = NULL) cat(paste0("\n", string))
+catn <- function(string = NULL, color = NULL) cat(paste0("\n", string))
 
 reset_DF <- function() {
   DF <<- tibble(
@@ -17,6 +17,14 @@ reset_DF <- function() {
                )
 }
 
+confirm_answer <- function(answer, message = "#> Vous pouvez modifier") {
+  catn(paste(message, answer))
+  catn()
+  new_answer <- readline("#> (Entrée pour conserver) ? ")
+  if (new_answer == "") answer
+  else confirm_answer(new_answer)
+}
+
 read_answer <- function(default_answer = NULL,
                         accepted_answers = NULL,
                         message = "Veuillez saisir quelque chose") {
@@ -24,13 +32,6 @@ read_answer <- function(default_answer = NULL,
     cat("\n**** ---------------------------------------------- ****")
     cat("\n**** Réponse incorrecte * Merci de saisir à nouveau ****")
     cat("\n**** ---------------------------------------------- ****\n")
-  }
-  confirm_answer <- function(answer) {
-    catn(paste("#> Vous pouvez modifier", answer))
-    catn()
-    new_answer <- readline("#> (Entrée pour conserver) ? ")
-    if (new_answer == "") answer
-    else confirm_answer(new_answer)
   }
   read_answer_with_no_accepted_answers <- function() {
     answer <- readline("#> ")
@@ -130,7 +131,11 @@ input_info_for_document <- function(doc_id) {
 # input_info_for_document("123456")
 
 entry_new_document <- function() {
-  doc_id <- read_answer(NULL, NULL, "Saisissez l'ID du document")
+  if(! is.null(DF)) {
+    last_doc_id <- DF$ID[[nrow(DF)]]
+    doc_id <- confirm_answer(last_doc_id, "Saisissez l'ID du document")
+  }
+  else doc_id <- read_answer(NULL, NULL, "Saisissez l'ID du document")
   info_doc <- input_info_for_document(doc_id)
 }
 # entry_new_document()
@@ -141,7 +146,7 @@ saisir_document <- function() {
 }
 
 ecrire_fichier <- function(filename = NULL) {
-  list.files()
+  print(list.files())
   if (is.null(filename)) {
     filename <- read_answer(NULL, NULL, "Veuillez choisir un nom de fichier")
   }
@@ -149,7 +154,7 @@ ecrire_fichier <- function(filename = NULL) {
 }
 
 lire_fichier <- function(filename = NULL) {
-  list.files()
+  print(list.files())
   if (is.null(filename)) {
     filename <- read_answer(NULL, NULL, "Veuillez choisir un nom de fichier")
   }
@@ -163,7 +168,7 @@ wait_for_enter <- function() {
 }
 
 montrer_df <- function() {
-  print(DF)
+  show_df()
   wait_for_enter()
 }
 
@@ -176,16 +181,24 @@ modifier_df <- function() {
   DF <<- edit(DF)
 }
 
+show_df <- function() {
+  if( ! is.null(DF)) {
+    catn("Ab Su AF Sg  Id  Concept")
+    catn()
+    col_reordered_DF <- DF %>% select(c(3, 4, 5, 6, 1, 2))
+    print_row <- function(x) {cat(x); catn()}
+    apply(col_reordered_DF, 1, print_row)
+  }
+}
+
 show_choices <- function() {
-  catn("---------------------------------------------")
-  catn("|  1. Saisir un document                     |")
-  catn("|  2. Sauver le data frame dans un fichier   |")
-  catn("|  3. Lire le data frame depuis un fichier   |")
-  catn("|  4. Reset du data frame                    |")
-  catn("|  5. Exporter au format .csv                |")
-  catn("|  6. Éditer le data frame                   |")
-  catn("|  0. Quitter                                |")
-  catn("---------------------------------------------")
+  catn("--------------------------------")
+  catn("|  1. Saisir un document       |")
+  catn("|  2. Montrer le data frame    |")
+  catn("|  3. Éditer le data frame     |")
+  catn("|  4. Exporter au format .csv  |")
+  catn("|  0. Quitter                  |")
+  catn("--------------------------------")
   catn()
 }
 
@@ -197,11 +210,9 @@ run <- function() {
     choice <- read_answer(1, 0:6, "Que souhaitez-vous faire ?")
     choice <- as.integer(choice)
     switch(choice,
-    {saisir_document()},
-    {ecrire_fichier()},
-    {lire_fichier()},
-    {reset_DF()},
-    {export_to_csv()},
-    {modifier_df()})
+    { saisir_document()},
+    {  },
+    { modifier_df() },
+    { export_to_csv() })
   }
 }
