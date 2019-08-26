@@ -133,7 +133,7 @@ input_info_for_document <- function(doc_id) {
 entry_new_document <- function() {
   if(! is.null(DF)) {
     last_doc_id <- DF$ID[[nrow(DF)]]
-    doc_id <- confirm_answer(last_doc_id, "Saisissez l'ID du document")
+    doc_id <- confirm_answer(last_doc_id, "Saisissez l'ID d'un document ou continuer sur le document")
   }
   else doc_id <- read_answer(NULL, NULL, "Saisissez l'ID du document")
   info_doc <- input_info_for_document(doc_id)
